@@ -41,7 +41,7 @@ abstract class QueryFilters
         $this->builder = $builder;
 
         foreach ($this->filters() as $name => $value) {
-            $methodName = 'filter' . ucfirst($name);
+            $methodName = 'filter' . studly_case($name);
 
             if (! method_exists($this, $methodName)) {
                 continue;
