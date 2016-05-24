@@ -41,14 +41,16 @@ abstract class QueryFilters
         $this->builder = $builder;
 
         foreach ($this->filters() as $name => $value) {
-            if (! method_exists($this, $name)) {
+            $methodName = 'filter' . ucfirst($name);
+
+            if (! method_exists($this, $methodName)) {
                 continue;
             }
 
             if (strlen($value)) {
-                $this->$name($value);
+                $this->$methodName($value);
             } else {
-                $this->$name();
+                $this->$methodName();
             }
         }
 
