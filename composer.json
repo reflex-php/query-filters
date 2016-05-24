@@ -13,6 +13,6 @@
             "Reflex\\QueryFiltering\\": "src/"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "licence": "MIT"
 }
