@@ -2,8 +2,9 @@
 
 namespace Reflex\QueryFiltering;
 
-use Illuminate\Database\Eloquent\Builder;
+use ReflectionClass;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 abstract class QueryFilters
 {
@@ -20,6 +21,13 @@ abstract class QueryFilters
      * @var Builder
      */
     protected $builder;
+
+    /**
+     * The reflection instance.
+     *
+     * @var ReflectionClass
+     */
+    protected $reflector;
 
     /**
      * Create a new QueryFilters instance.
@@ -40,26 +48,47 @@ abstract class QueryFilters
     public function apply(Builder $builder)
     {
         $this->builder = $builder;
+        $this->reflector = new ReflectionClass($this);
 
-        collect($this->filters())->map(function ($name, $value) {
-            $methodName = $this->buildMethodName($name);
+        collect($this->filters())->map(function ($value, $key) {
+            $methodName = $this->buildMethodName($key);
 
-            if (! method_exists($this, $methodName)) {
+            if (! $this->isFilterableMethod($methodName)) {
                 return;
             }
 
-            call_user_method_array($methodName, $this, [$value]);
+            if (strlen($value)) {
+                call_user_func([$this, $methodName], $value);
+                return;
+            }
 
-            // if (strlen($value)) {
-            //     $this->$methodName($value);
-            // } else {
-            //     $this->$methodName();
-            // }
+            call_user_func([$this, $methodName]);
         });
 
         return $this->builder;
     }
 
+    /**
+     * Is method filterable?
+     *
+     * @var string $methodName
+     * @return boolean
+     */
+    protected function isFilterableMethod($methodName)
+    {
+        try {
+            return $this->reflector->getMethod($methodName)->isPublic();
+        } catch (\ReflectionException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Create method name from key
+     *
+     * @var string $key
+     * @return string
+     */
     protected function buildMethodName($key)
     {
         return 'filter' . studly_case($key);
