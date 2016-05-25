@@ -1,4 +1,5 @@
 <?php
+
 namespace Reflex\QueryFiltering;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -40,21 +41,28 @@ abstract class QueryFilters
     {
         $this->builder = $builder;
 
-        foreach ($this->filters() as $name => $value) {
-            $methodName = 'filter' . studly_case($name);
+        collect($this->filters)->map(function ($name, $value) {
+            $methodName = $this->buildMethodName($name);
 
             if (! method_exists($this, $methodName)) {
-                continue;
+                return;
             }
 
-            if (strlen($value)) {
-                $this->$methodName($value);
-            } else {
-                $this->$methodName();
-            }
-        }
+            call_user_method_array($methodName, $this, [$value]);
+
+            // if (strlen($value)) {
+            //     $this->$methodName($value);
+            // } else {
+            //     $this->$methodName();
+            // }
+        });
 
         return $this->builder;
+    }
+
+    protected function buildMethodName($key)
+    {
+        return 'filter' . studly_case($key);
     }
 
     /**
