@@ -41,7 +41,7 @@ abstract class QueryFilters
     {
         $this->builder = $builder;
 
-        collect($this->filters)->map(function ($name, $value) {
+        collect($this->filters())->map(function ($name, $value) {
             $methodName = $this->buildMethodName($name);
 
             if (! method_exists($this, $methodName)) {
