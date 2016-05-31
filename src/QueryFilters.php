@@ -91,7 +91,7 @@ abstract class QueryFilters
      */
     protected function buildMethodName($key)
     {
-        return 'filter' . studly_case($key);
+        return 'filtersOn' . studly_case($key);
     }
 
     /**
