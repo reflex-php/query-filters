@@ -30,6 +30,13 @@ abstract class QueryFilters
     protected $reflector;
 
     /**
+     * Filter namespace
+     *
+     * @var string
+     */
+    protected $namespace;
+
+    /**
      * Create a new QueryFilters instance.
      *
      * @param Request $request
@@ -47,22 +54,29 @@ abstract class QueryFilters
      */
     public function apply(Builder $builder)
     {
-        $this->builder = $builder;
+        $this->builder   = $builder;
         $this->reflector = new ReflectionClass($this);
 
-        collect($this->filters())->map(function ($value, $key) {
-            $methodName = $this->buildMethodName($key);
+        $this->filters()->map(function ($value, $key) {
+            // $methodName = $this->buildMethodName($key);
+            $className = $this->buildClassName($key);
 
-            if (! $this->isFilterableMethod($methodName)) {
+            if (! $this->isFilterClass($className)) {
                 return;
             }
+
+            // if (! $this->isFilterableMethod($methodName)) {
+            //     return;
+            // }
 
             if (strlen($value)) {
-                call_user_func([$this, $methodName], $value);
+                with(new $className)->filterOn($value);
+                // call_user_func([$this, $methodName], $value);
                 return;
             }
 
-            call_user_func([$this, $methodName]);
+            with(new $className)->filterOn();
+            // call_user_func([$this, $methodName]);
         });
 
         return $this->builder;
@@ -84,6 +98,26 @@ abstract class QueryFilters
     }
 
     /**
+     * Check if class is a filterable instance
+     * @param  string  $name Name of class to check
+     * @return boolean
+     */
+    protected function isFilterClass($name)
+    {
+        return class_exists($name) && $name instanceof Filterable;
+    }
+
+    /**
+     * Build class name
+     * @param  string $key
+     * @return string
+     */
+    protected function buildClassName($key)
+    {
+        return $this->namespace . studly_case($key);
+    }
+
+    /**
      * Create method name from key
      *
      * @var string $key
@@ -101,6 +135,6 @@ abstract class QueryFilters
      */
     public function filters()
     {
-        return $this->request->all();
+        return collect($this->request->all());
     }
 }
