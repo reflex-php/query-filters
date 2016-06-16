@@ -1,8 +1,19 @@
 <?php
-
 namespace Reflex\QueryFiltering;
 
-interface Filterable
+use Illuminate\Database\Eloquent\Builder;
+
+trait Filterable
 {
-    public function filtersOn($with = null);
+    /**
+     * Filter a result set.
+     *
+     * @param  Builder      $query
+     * @param  QueryFilters $filters
+     * @return Builder
+     */
+    public function scopeFilter(Builder $query, QueryFilters $filters)
+    {
+        return $filters->apply($query);
+    }
 }
